@@ -21,9 +21,14 @@ app.use(express.json());
 
 app.get("/restricted", verifyToken, (req, res) => {
   jwt.verify(req.token, JWT_SECRET_KEY, (err, authData) =>
-    err ? res.sendStatus(403) : res.json({ message: "ok", authData })
+    err ? res.status(403).json({ message: "User is not authorized", msg_id: "USR_NOT_AUTHORIZED" }) : res.json({ message: "ok", authData })
   );
 });
+
+app.post("/test", (req, res) => {
+  console.log("testted")
+  res.status(401).json({data: "fasz", error: null})
+})
 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -31,7 +36,7 @@ app.post("/login", async (req, res) => {
   const user = await User.findOne({
     where: { email },
   });
-  if (!user) return res.json({ status: "fail", msg: "Not registered" });
+  if (!user) return res.status(401).json({message: "Not registered", msg_id: "NOT_REGISTERED" });
 
   bcrypt.compare(password, user.dataValues.password, (err, resolve) => {
     if (err) {
@@ -45,14 +50,11 @@ app.post("/login", async (req, res) => {
           expiresIn: "3000s",
         },
         (err, token) => {
-          return res.json({ status: "success", data: { token } });
+          return res.status(200).json({ message: "Login succesfull", token });
         }
       );
     } else {
-      return res.json({
-        status: "fail",
-        msg: "Password does not match",
-      });
+      return res.status(401).json({ message: "Password does not match", msg_id: "PWD_NOT_MATCH"});
     }
   });
 });
@@ -60,30 +62,46 @@ app.post("/login", async (req, res) => {
 app.post("/register", async (req, res) => {
   const { email, password } = req.body;
 
-  const registeredEmail = await User.findOne({
-    where: { email },
-  });
-
-  if (registeredEmail) {
-    return res.json({ status: "fail", msg: "Already registered" });
+  try {
+    const registeredEmail = await User.findOne({
+      where: { email },
+    });    
+    if (registeredEmail) {
+      return res.status(409).json({ message: "Already registered", msg_id: "ALREADY_REGISTERED" });
+    }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: "Database error", msg_id: "DB_ERROR" }); 
   }
 
-  bcrypt.hash(password, 10, async (err, hashedPassword) => {
-    let user = await User.create({
-      email,
-      password: hashedPassword,
-    });
-    return user
-      ? res.json({ status: "success", data: null })
-      : res.json({ status: "error", msg: "Database error" });
-  });
+  try {
+    bcrypt.hash(password, 10, async (err, hashedPassword) => {
+        try {
+          if (err) throw error
+          let user = await User.create({
+            email,
+            password: hashedPassword,
+          });
+          return user
+            ? res.status(200).json({message: "Registration successfull!", msg_id: "REGISTRATION_SUCCESS", user})
+            : res.status(500).json({ message: "Database error", msg_id: "DB_ERROR" }); 
+      } catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: "Database error", msg_id: "DB_ERROR" }); 
+      }
+    });    
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: "Password hashing error", msg_id: "PW_HASHING_ERROR" }); 
+  }
+
 });
 
 function verifyToken(req, res, next) {
   const bearerHeader = req.headers.authorization;
 
   if (typeof bearerHeader === "undefined") {
-    res.sendStatus(403);
+    res.status(403).json({ message: "User is not authorized", msg_id: "USR_NOT_AUTHORIZED" });
   } else {
     const bearerToken = bearerHeader.split(" ")[1];
     req.token = bearerToken;
