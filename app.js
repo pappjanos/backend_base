@@ -32,7 +32,7 @@ app.post("/test", (req, res) => {
 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
+  
   const user = await User.findOne({
     where: { email },
   });
