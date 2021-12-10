@@ -1,19 +1,25 @@
-const Sequelize = require("sequelize");
-const db = require("../config/database");
+const { DataTypes, Model } = require("sequelize");
+const db = require("../config/database.js");
 
-const Blog = db.define(
-  "blog",
+class BlogEntry extends Model {}
+
+BlogEntry.init(
   {
     title: {
-      type: Sequelize.STRING,
+      type: DataTypes.STRING,
     },
     text: {
-      type: Sequelize.STRING,
+      type: DataTypes.STRING,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
     },
   },
   {
+    sequelize: db,
+    modelName: "blogentry",
     freezeTableName: true,
   }
 );
 
-module.exports = Blog;
+module.exports = BlogEntry;

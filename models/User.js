@@ -1,17 +1,20 @@
-const Sequelize = require("sequelize");
-const db = require("../config/database");
+const { DataTypes, Model } = require("sequelize");
+const db = require("../config/database.js");
 
-const User = db.define(
-  "user",
+class User extends Model {}
+
+User.init(
   {
     email: {
-      type: Sequelize.STRING,
+      type: DataTypes.STRING,
     },
     password: {
-      type: Sequelize.STRING,
+      type: DataTypes.STRING,
     },
   },
   {
+    sequelize: db,
+    modelName: "user",
     freezeTableName: true,
   }
 );
