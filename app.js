@@ -130,7 +130,6 @@ app.post("/blog-entry", async (req, res) => {
         msg_id: "TITLE_OR_TEXT_EMPTY",
       });
     const blogEntry = await Blog.create({
-      id,
       title,
       text,
       user_id,
@@ -156,7 +155,7 @@ app.get("/blog-entry", async (req, res) => {
     return res
       .status(404)
       .json({ message: "UserId is missing!", msg_id: "USER_ID_MISSING" });
-  const blogEntries = await Blog.findAll({ where: { user_id: userId } });
+  const blogEntries = await Blog.findAll({ where: { user_id: userId }, order: [['createdAt', 'DESC']] });
   if (!blogEntries)
     return res.status(500).json({
       message: "Database error",
@@ -164,6 +163,23 @@ app.get("/blog-entry", async (req, res) => {
     });
 
   return res.status(200).json({ blogEntries });
+});
+
+app.get("/blog-entry/:id", async (req, res) => {
+  const postId = req.params.id;
+
+  if (!postId)
+    return res
+      .status(404)
+      .json({ message: "PostId is missing!", msg_id: "POST_ID_MISSING" });
+  const blogEntry = await Blog.findOne({ where: { id: postId } });
+  if (!blogEntry)
+    return res.status(404).json({
+      message: "Blog entry not found",
+      msg_id: "BLOG_ENTRY_NOT_FOUND",
+    });
+
+  return res.status(200).json({ blogEntry });
 });
 
 function verifyToken(req, res, next) {
