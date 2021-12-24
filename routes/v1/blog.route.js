@@ -1,12 +1,13 @@
 const express = require("express");
 const blogController = require("../../controllers/blog.controller");
-
 const router = express.Router();
+const verifyToken = require("../../utils/jwt");
 
-router.post("/blog-entry", blogController.addBlogEntry);
-router.delete("/blog-entry", blogController.deleteBlogEntry);
-router.get("/blog-entry", blogController.getBlogEntries);
-router.patch("/blog-entry", blogController.patchBlogEntry);
-router.get("/blog-entry/:id", blogController.getBlogEntry);
+router
+  .post("/blog-entry", verifyToken, blogController.addBlogEntry)
+  .delete("/blog-entry", verifyToken, blogController.deleteBlogEntry)
+  .get("/blog-entry", verifyToken, blogController.getBlogEntries)
+  .patch("/blog-entry", verifyToken, blogController.patchBlogEntry)
+  .get("/blog-entry/:id", verifyToken, blogController.getBlogEntry);
 
 module.exports = router;

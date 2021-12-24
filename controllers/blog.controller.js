@@ -1,6 +1,4 @@
 const Blog = require("../models/Blog");
-const jwt = require("jsonwebtoken");
-const config = require("../config/config");
 
 const addBlogEntry = async (req, res) => {
   try {
